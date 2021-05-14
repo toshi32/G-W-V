@@ -1,4 +1,5 @@
-# require '/Users/nagasan/text_files/vending_machine2.rb'
+# irb
+# require '/Users/nagasan/text_files/group_sample/group/GroupWork-Vender/vending_machine.rb'
 # （↑のパスは、自動販売機ファイルが入っているパスを指定する）
 # 初期設定（自動販売機インスタンスを作成して、vmという変数に代入する）
 # vm = VendingMachine.new
@@ -8,6 +9,7 @@
 # vm.current_slot_money
 # 作成した自動販売機に入れたお金を返してもらう
 # vm.return_money
+
 class VendingMachine
   # ステップ０ お金の投入と払い戻しの例コード
   # ステップ１扱えないお金の例コード
@@ -21,11 +23,55 @@ class VendingMachine
     5.times do
       @drinks << ["コーラ", 120]
     end
+    choose_action   #choose_actionを呼び出し、行動を選択させる
+  end
+
+  def choose_action
+    while true      #各actionの実行後、次のactionに移れるようにループさせる。７を押すと標準入力を抜け、irbに戻る。
+      puts "-----------------------------------"
+      puts "何をしますか？ 番号で選んでください。"
+      actions =[          #選択肢一覧
+        [ "0 :   お金を入れる"],
+        [ "1 :   飲み物を買う"],
+        [ "2 :   投入金額の確認"],
+        [ "3 :   合計購入金額の確認"],
+        [ "4 :   在庫の確認"],
+        [ "5 :   在庫を加える"],
+        [ "6 :   おつりの返却"],
+        [ "7 :   やめる"],
+      ]
+      puts actions
+      action = gets.chomp  #選択肢から改行を取り除いて次のアクションを取得
+      case action          #actionの値によって動作を分岐
+      when "0"             # お金を入れる処理
+        puts "投入金額を入力して下さい。"
+        p [10, 50, 100, 500, 1000]
+        money = gets.to_i    #投入金額を入力する
+        if money == 10 || money == 50 || money == 100 || money == 500 || money == 1000  #入力値がMONEYの値であれば、金額投入メソッドを呼び出す
+          slot_money(money)       #moneyを引数に持たせる
+        else
+          puts "正しくない金額が入力された為、処理を取り消しました。"
+        end
+      when "1"          #以下 when６までactionの番号に対応するメソッドの呼び出し。
+        buy_drink
+      when "2"
+        current_slot_money
+      when "3"
+        sold_amount
+      when "4"
+        status
+      when "5"
+        add_stocks
+      when "6"
+        return_money
+      when "7"
+        return          #choose_actionメソッドを抜けてirbへ戻る
+      end
+    end
   end
 
   def buy_drink    #買えるものをリストに選別し、購入する意思があれば stock_adjust メソッドを呼び出す
-    drinks = @drinks      #drinks << [["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120]]
-    drink_kind = drinks.uniq    #重複する値の排除    drink_kind = [["コーラ", 120]]
+    drink_kind = @drinks.uniq    #重複する値の排除    drink_kind = [["コーラ", 120]]
     can_buy_drinks = []       #購入可能リストの配列作成
     i = 0                     #can_buy_drinks用のインデックス番号作成
     drink_kind.each do |d|    #drink_kindの値をそれぞれ個別に処理する
@@ -42,12 +88,8 @@ class VendingMachine
           print d
           puts "\n"                   #1行ずつ改行を入れる
         end
-        confirm_buy = gets    #購入する飲み物のインデックス番号で入力してもらう
-        p confirm_buy
-        p confirm_buy.class
-        not_buy = "#{can_buy_drinks.last[0]}\n" #getsで取得した値に改行があるので、「購入しない」の方にも改行を加える
-        p not_buy
-        p not_buy[0].class
+        confirm_buy = gets.chomp    #購入する飲み物のインデックス番号で入力してもらう
+        not_buy = "#{can_buy_drinks.last[0]}" #getsで取得した値に改行があるので、「購入しない」の方にも改行を加える
         if confirm_buy == not_buy  #"購入しない"を選択していたら処理を終了する
           puts "購入をやめました。"
           return
@@ -63,6 +105,7 @@ class VendingMachine
               @sold_amount += drink_price   #drinkの金額を売上合計に足す。
               @slot_money -= argument[1]    #所持金からdrinkの金額を減らす。
               puts "#{argument[0]}を購入しました。"
+              current_slot_money
               return
             else
               puts "入力した値が飲み物の番号と一致しませんでした。"
@@ -78,8 +121,7 @@ class VendingMachine
   end
 
   def can_buy_list  #購入可能な飲み物をリスト表示する
-    drinks = @drinks
-    drink_kind = drinks.uniq    #重複する値の排除    drink_kind = [["コーラ", 120]]
+    drink_kind = @drinks.uniq    #重複する値の排除    drink_kind = [["コーラ", 120]]
     can_buy_drinks = []       #購入可能リストの配列作成
     i = 0                     #can_buy_drinks用のインデックス番号作成
     drink_kind.each do |d|    #drink_kindの値をそれぞれ個別に処理する
@@ -101,12 +143,11 @@ class VendingMachine
   end
 
   def stock_adjust(drink_kinds_index)
-    drinks = @drinks  #drinks << [["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120]]
     i = 0              #drinksのインデックス番号を扱う変数
-    drinks.each do |d|  #drinksの各値を引数と比較していく
+    @drinks.each do |d|  #drinksの各値を引数と比較していく  [["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120]]
       if d == drink_kinds_index   # ["コーラ", 120] と drink_kinds_index が同じか？
-        drinks.delete_at i        # 同じであればdrinksのインデックス番号 i を削除する
-        p drinks
+        @drinks.delete_at i        # 同じであればdrinksのインデックス番号 i を削除する
+        p @drinks
         return
       end
     i += 1  #if文が一致しなかった場合インデックス番号を１増やす
@@ -114,14 +155,12 @@ class VendingMachine
   end
 
   def sold_amount #売上合計を出力
-    sold_amount = @sold_amount
-    puts "#{sold_amount}円"
+    puts "#{@sold_amount}円"
   end
 
   def status      #drinkの名前、価格、本数をそれぞれ出力する
-    drinks = @drinks        #drinks << [["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120]]
-    drink_kind = drinks.uniq  #重複する値の排除    drink_kind = [["コーラ", 120]]                      itself = 自分自身
-    stocks = drinks.group_by(&:itself).map do |key, value|  #値ごとにまとめてグループ化  drinks.group_by(&:itself) => {["コーラ", 120]: [["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120]}
+    drink_kind = @drinks.uniq  #重複する値の排除    drink_kind = [["コーラ", 120]]                      itself = 自分自身
+    stocks = @drinks.group_by(&:itself).map do |key, value|  #値ごとにまとめてグループ化  drinks.group_by(&:itself) => {["コーラ", 120]: [["コーラ", 120], ["コーラ", 120], ["コーラ", 120], ["コーラ", 120]}
                                                             #     .map do |key, value|  =>                             key       :               value   5個
       "#{value.count}"                                      #     stocks = 5 [5]
     end
@@ -134,24 +173,24 @@ class VendingMachine
 
   def add_stocks
     puts "在庫を増やしたい商品を選んで入力して下さい。やめる時は「なし」と入力して下さい。"
-    drinks_name = ["コーラ", "redbull", "水"]
+    drinks_name = ["コーラ", "redbull", "水"]     #名前の配列を表示する
     drink = ""
     puts drinks_name
-    drink_name = gets.chomp!
-    if drink_name == "コーラ"
+    drink_name = gets.chomp                            #上記配列から名前を選ぶ
+    if drink_name == "コーラ"                   #以下 水 までgetsの取得値を元にdrinkの配列を作成
       drink = ["コーラ", 120]
     elsif drink_name == "redbull"
       drink = ["redbull", 200]
     elsif drink_name == "水"
       drink = ["水", 100]
-    elsif drink_name == "なし"
+    elsif drink_name == "なし"                   #取り消す場合の処理。returnで何もせずメソッドを抜ける。メソッドを抜けないとdrinkが在庫に追加されてしまう為。
       puts "在庫追加を取り消しました"
       return
-    else
+    else                                        #上記の分岐に当てはまらない場合もreturnでメソッドを抜ける。
       puts "#{drink_name}は在庫にありませんでした。"
       return
     end
-    5.times do
+    5.times do                                  #drinkを５個在庫に追加する
       @drinks << drink
     end
     puts "#{drink[0]} : #{drink[1]}円 を5本追加しました。"
@@ -159,9 +198,8 @@ class VendingMachine
 
   # 投入金額の総計を取得できる。
   def current_slot_money
-    slot_money = @slot_money
     # 自動販売機に入っているお金を表示する
-    puts "投入金額 : #{slot_money}円"
+    puts "残金 : #{@slot_money}円"
   end
   # 10円玉、50円玉、100円玉、500円玉、1000円札を１つずつ投入できる。
   # 投入は複数回できる。
